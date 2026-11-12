@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Students</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-page="admin-students">
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-brand"><img class="brand-logo" src="logo-white.svg" alt="" /><span>Admin</span></div><button class="btn btn-secondary" type="button" data-mobile-menu>☰</button></div>
+        <nav>
+          <a href="admin-dashboard.html">Dashboard</a>
+          <a class="active" href="admin-students.html">Students</a>
+          <a href="admin-teachers.html">Teachers</a>
+          <a href="admin-classes.html">Classes</a>
+          <a href="admin-subjects.html">Subjects</a>
+          <a href="admin-cbt.html">CBT</a>
+          <a href="admin-academic-results.html">Academic Results</a>
+          <a href="admin-activities.html">Activities</a>
+          <a href="admin-settings.html">Settings</a>
+          <a href="index.html" onclick="logout()">Logout</a>
+        </nav>
+      </aside>
+      <main class="main-panel">
+        <header class="topbar"><h1 class="page-title">Students</h1><div class="topbar-actions"><span class="user-chip">Admin</span><button class="btn btn-secondary" type="button" onclick="logout()">Logout</button></div></header>
+        <div class="content">
+          <section class="card">
+            <div class="card-header"><h3>Add Student</h3></div>
+            <form id="addStudentForm" class="form-grid">
+              <div><label>Full Name</label><input id="studentName" type="text" required /></div>
+              <div><label>Student ID</label><input id="studentId" type="text" required /></div>
+              <div><label for="studentClass">Class</label><select id="studentClass" required></select></div>
+              <div><label>Date of birth</label><input id="studentDateOfBirth" type="date" required /></div>
+              <div><label>Session</label><select id="studentSession" required></select></div>
+              <div><label for="studentPassword">Password</label><div class="password-field"><input id="studentPassword" type="password" minlength="6" placeholder="At least 6 characters" required /><button class="password-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false"><svg class="password-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="password-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a14.8 14.8 0 0 1-3.1 3.8M6.2 6.2C3.5 8.1 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 4.1-.8"/></svg></button></div></div>
+              <div><label>Status</label><select id="studentStatus"><option>Active</option><option>Inactive</option></select></div>
+              <div><label for="studentPhoto">Student photo</label><input id="studentPhoto" type="file" accept="image/*" /></div>
+              <div style="grid-column: 1 / -1;"><button class="btn btn-primary" type="submit">Add Student</button></div>
+            </form>
+          </section>
+
+          <section class="table-card" style="margin-top: 1rem;">
+            <div class="card-header">
+              <h3>Student Records</h3>
+              <span id="adminStudentCount" class="muted" role="status" aria-live="polite"></span>
+            </div>
+            <div class="filter-bar student-record-filters" aria-label="Filter student records">
+              <div class="filter-group">
+                <label for="adminStudentClassFilter">Class</label>
+                <select id="adminStudentClassFilter"><option value="">All classes</option></select>
+              </div>
+              <div class="filter-group">
+                <label for="adminStudentFilter">Student</label>
+                <select id="adminStudentFilter"><option value="">All students</option></select>
+              </div>
+              <div class="filter-group">
+                <label for="adminStudentSessionFilter">Session</label>
+                <select id="adminStudentSessionFilter"><option value="">All sessions</option></select>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>Photo</th><th>Student ID</th><th>Name</th><th>Class</th><th>Date of birth</th><th>Session</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody id="adminStudentsTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <div class="modal" id="studentProfileModal" role="dialog" aria-modal="true" aria-labelledby="studentProfileName">
+      <div class="modal-box profile-modal-box">
+        <button class="profile-modal-close" type="button" aria-label="Close student profile" data-close-student-profile>&times;</button>
+        <div class="profile-modal-header">
+          <img id="studentProfilePhoto" class="profile-modal-photo" alt="Student profile" />
+          <div><h3 id="studentProfileName"></h3><p id="studentProfileId" class="muted"></p></div>
+        </div>
+        <dl id="studentProfileDetails" class="profile-modal-details"></dl>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" type="button" data-close-student-profile>Close</button>
+          <button class="btn btn-primary" id="editStudentProfile" type="button">Edit profile</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="editStudentModal" role="dialog" aria-modal="true" aria-labelledby="editStudentTitle">
+      <div class="modal-box profile-modal-box">
+        <h3 id="editStudentTitle">Edit Student Profile</h3>
+        <form id="editStudentForm" class="form-grid">
+          <div><label for="editStudentId">Student ID</label><input id="editStudentId" type="text" readonly /></div>
+          <div><label for="editStudentName">Full Name</label><input id="editStudentName" type="text" required /></div>
+          <div><label for="editStudentClass">Class</label><select id="editStudentClass" required></select></div>
+          <div><label for="editStudentDateOfBirth">Date of birth</label><input id="editStudentDateOfBirth" type="date" required /></div>
+          <div><label for="editStudentSession">Session</label><select id="editStudentSession" required></select></div>
+          <div><label for="editStudentStatus">Status</label><select id="editStudentStatus"><option>Active</option><option>Inactive</option></select></div>
+          <div><label for="editStudentPhoto">Profile photo</label><input id="editStudentPhoto" type="file" accept="image/*" /></div>
+          <div><label for="editStudentPassword">Set new password</label><div class="password-field"><input id="editStudentPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Leave blank to keep current" /><button class="password-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false"><svg class="password-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="password-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a14.8 14.8 0 0 1-3.1 3.8M6.2 6.2C3.5 8.1 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 4.1-.8"/></svg></button></div></div>
+          <div class="modal-actions" style="grid-column: 1 / -1;">
+            <button class="btn btn-secondary" id="cancelStudentEdit" type="button">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-sync.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

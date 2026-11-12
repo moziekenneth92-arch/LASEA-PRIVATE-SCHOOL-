@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Activities</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .student-activities-content {
+        max-width: 920px;
+      }
+
+      .activity-card {
+        padding: clamp(1.25rem, 3vw, 2rem);
+      }
+
+      .activity-heading {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .activity-heading h2 {
+        margin: 0.25rem 0 0.4rem;
+        font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+      }
+
+      .activity-heading p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .activity-list {
+        gap: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .activity-entry {
+        position: relative;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem 0;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+      }
+
+      .activity-entry + .activity-entry {
+        border-top: 1px solid var(--border);
+      }
+
+      .activity-marker {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        flex: 0 0 2.25rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        place-items: center;
+        border: 1px solid #d9e3f0;
+        border-radius: 50%;
+        background: #f2f6fb;
+        color: var(--primary);
+      }
+
+      .activity-marker svg {
+        width: 17px;
+        height: 17px;
+      }
+
+      .activity-copy {
+        min-width: 0;
+        padding-top: 0.15rem;
+      }
+
+      .activity-copy strong {
+        display: block;
+        font-weight: 650;
+      }
+
+      .activity-copy time {
+        display: block;
+        margin-top: 0.3rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+
+      .activity-empty {
+        justify-content: center;
+        padding: 2.5rem 1rem;
+        color: var(--muted);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body data-page="student-activities">
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand"><img class="brand-logo" src="logo-white.svg" alt="" /><span>Student</span></div>
+          <button class="btn btn-secondary" type="button" data-mobile-menu>☰</button>
+        </div>
+        <nav>
+          <a href="student-dashboard.html">Dashboard</a>
+          <a href="student-subjects.html">My Subjects</a>
+          <a href="student-cbt.html">Take CBT</a>
+          <a href="student-cbt-result.html">CBT Results</a>
+          <a href="student-academic-results.html">Academic Results</a>
+          <a href="index.html" onclick="logout()">Logout</a>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1 class="page-title">Activities</h1>
+          <div class="topbar-actions"><span class="user-chip">Student</span><button class="btn btn-secondary" type="button" onclick="logout()">Logout</button></div>
+        </header>
+
+        <div class="content student-activities-content">
+          <section class="card activity-card">
+            <header class="activity-heading">
+              <span class="eyebrow">Your account</span>
+              <h2>Recent activity</h2>
+              <p>A record of actions and updates from your student portal.</p>
+            </header>
+            <ul id="studentActivityList" class="list activity-list"></ul>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-sync.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

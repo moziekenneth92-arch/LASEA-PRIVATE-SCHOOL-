@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CBT Result</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-page="student-cbt-result">
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand"><img class="brand-logo" src="logo-white.svg" alt="" /><span>Student</span></div>
+          <button class="btn btn-secondary" type="button" data-mobile-menu>☰</button>
+        </div>
+        <nav>
+          <a href="student-dashboard.html">Dashboard</a>
+          <a href="student-subjects.html">My Subjects</a>
+          <a href="student-cbt.html">Take CBT</a>
+          <a class="active" href="student-cbt-result.html">CBT Results</a>
+          <a href="student-academic-results.html">Academic Results</a>
+          <a href="index.html" onclick="logout()">Logout</a>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1 class="page-title">CBT Results</h1>
+          <div class="topbar-actions"><span class="user-chip">Student</span><button class="btn btn-secondary" type="button" onclick="logout()">Logout</button></div>
+        </header>
+
+        <div class="content">
+          <section id="cbtNoResults" class="card empty-state" style="max-width: 700px; margin: 0 auto;" hidden>
+            <h2>No test taken yet</h2>
+            <p>Your completed CBT tests and results will appear here.</p>
+            <a href="student-cbt.html" class="btn btn-primary">View available tests</a>
+          </section>
+          <section id="cbtResultCard" class="card" style="max-width: 700px; margin: 0 auto;" hidden>
+            <div class="card-header">
+              <h3 id="resultSubject"></h3>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-card"><div class="small-label">Score</div><h3 id="resultScore"></h3></div>
+              <div class="stat-card"><div class="small-label">Percentage</div><h3 id="resultPercentage"></h3></div>
+              <div class="stat-card"><div class="small-label">Correct Answers</div><h3 id="correctAnswers"></h3></div>
+              <div class="stat-card"><div class="small-label">Wrong Answers</div><h3 id="wrongAnswers"></h3></div>
+            </div>
+            <div class="list-item" style="margin-top: 1rem;"><span>Time Used</span><strong id="timeUsed"></strong></div>
+            <div class="list-item" style="margin-top: 0.5rem;"><span>Date Taken</span><strong id="resultDate"></strong></div>
+            <section id="cbtQuestionReview" class="cbt-question-review" style="margin-top: 1rem;"></section>
+            <div style="margin-top: 1rem;">
+              <a href="student-cbt.html" class="btn btn-primary">Available CBT Tests</a>
+              <a href="student-dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-sync.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enter Scores</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-page="teacher-enter-scores">
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand"><img class="brand-logo" src="logo-white.svg" alt="" /><span>Teacher</span></div>
+          <button class="btn btn-secondary" type="button" data-mobile-menu>☰</button>
+        </div>
+        <nav>
+          <a href="teacher-dashboard.html">Dashboard</a>
+          <a href="teacher-students.html">My Classes</a>
+          <a href="teacher-subjects.html">My Subjects</a>
+          <a href="teacher-students.html">Students</a>
+          <a class="active" href="teacher-enter-scores.html">Enter Scores</a>
+          <a href="teacher-results.html">Academic Results</a>
+          <a href="teacher-cbt-questions.html">CBT Questions</a>
+          <a href="index.html" onclick="logout()">Logout</a>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1 class="page-title">Enter Scores</h1>
+          <div class="topbar-actions">
+            <span class="user-chip">Teacher</span>
+            <button class="btn btn-secondary" type="button" onclick="logout()">Logout</button>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="card score-entry-card">
+            <div class="score-entry-intro">
+              <div>
+                <h2>Student assessment</h2>
+                <p>Enter continuous assessment and exam marks. CA1 and CA2 are each out of 20; the exam is out of 60.</p>
+              </div>
+              <div class="score-entry-total-guide" aria-label="Maximum total score is 100">
+                <strong>100</strong><span>maximum total</span>
+              </div>
+            </div>
+            <div class="score-entry-filters">
+              <div class="filter-group"><label for="scoreClassSelect">Class</label><select id="scoreClassSelect"></select></div>
+              <div class="filter-group"><label for="scoreStudentSelect">Student</label><select id="scoreStudentSelect"></select></div>
+              <div class="filter-group"><label for="scoreTermSelect">Term</label><select id="scoreTermSelect"><option>First Term</option><option>Second Term</option><option>Third Term</option></select></div>
+              <div class="filter-group"><label for="scoreSessionSelect">Session</label><select id="scoreSessionSelect"></select></div>
+            </div>
+            <div class="score-entry-tools">
+              <div class="filter-group"><label for="scoreCsvFile">Import scores CSV</label><input id="scoreCsvFile" type="file" accept=".csv,text/csv" /></div>
+              <button class="btn btn-secondary" id="downloadCsvTemplate" type="button">Download student template</button>
+            </div>
+            <p class="score-template-help">The template uses the selected student, assigned subjects, and saved report details. Fill in the marks or details, then import the CSV.</p>
+            <p id="scoreEmpty" class="empty-state" hidden></p>
+            <div id="scoreSheet">
+              <div class="table-wrapper">
+                <table class="score-entry-table">
+                  <thead id="scoreTableHead"></thead>
+                  <tbody id="scoreTableBody"></tbody>
+                </table>
+              </div>
+              <div id="reportDetails" class="report-details"></div>
+              <div class="score-save-actions score-save-bar">
+                <button class="btn btn-primary" id="saveScores" type="button">Save Student Results</button>
+                <span id="scoreSaveStatus" role="status" aria-live="polite">Score changes sync to the database automatically.</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-sync.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
