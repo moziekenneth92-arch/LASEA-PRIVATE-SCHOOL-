@@ -2903,19 +2903,29 @@ function renderTeacherQuestions() {
       csvFile.value = '';
 
       showLoginLoader('Saving ' + result.questions.length + ' questions to the database...');
+      let syncErrors = [];
       try {
-        if (window.PortalSync) await window.PortalSync.flush();
+        if (window.PortalSync) syncErrors = await window.PortalSync.flush();
       } finally {
         hideLoginLoader();
       }
       renderRows();
-      const unsaved = (loadData().questions || []).filter((question) => !question._id).length;
+      const importedSignatures = new Set(result.questions.map((question) => JSON.stringify([
+        question.testTitle, question.subject, question.className, question.question,
+        question.options || [], question.answer
+      ])));
+      const savedSignatures = new Set((loadData().questions || []).filter((question) => question._id).map((question) => JSON.stringify([
+        question.testTitle, question.subject, question.className, question.question,
+        question.options || [], question.answer
+      ])));
+      const unsaved = [...importedSignatures].filter((signature) => !savedSignatures.has(signature)).length;
       const lines = [];
       if (unsaved === 0) {
         lines.push(result.questions.length + ' question(s) imported and saved to the database.');
         showToast(result.questions.length + ' questions imported and saved to the database.');
       } else {
-        lines.push(result.questions.length + ' question(s) imported, but ' + unsaved + ' have not reached the database yet. They are kept in this browser and the portal will retry on the next save.');
+        const syncError = syncErrors.length ? ' Sync error: ' + syncErrors[0] : '';
+        lines.push(result.questions.length + ' question(s) imported, but ' + unsaved + ' have not reached the database yet. They are kept in this browser and the portal will retry on the next save.' + syncError);
       }
       if (result.duplicates) lines.push(result.duplicates + ' duplicate row(s) skipped (already in the list).');
       if (result.errors.length) lines.push(result.errors.length + ' row(s) skipped:\n' + problems);
