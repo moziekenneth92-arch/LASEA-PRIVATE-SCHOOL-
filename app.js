@@ -851,12 +851,6 @@ function addPortalNotification(data, student, eventType, message, actorName, act
   });
 }
 
-function notifyClassStudents(data, className, eventType, message, actorName, actionUrl = '') {
-  (data.students || []).filter((student) => student.status !== 'Inactive'
-    && normalizeClassName(student.className) === normalizeClassName(className))
-    .forEach((student) => addPortalNotification(data, student, eventType, message, actorName, actionUrl));
-}
-
 function initializeStudentNotifications() {
   const container = document.createElement('div');
   container.className = 'portal-notification-layer';
@@ -869,7 +863,7 @@ function initializeStudentNotifications() {
     const student = getCurrentStudent();
     const data = loadData();
     const notices = (data.notifications || [])
-      .filter((notice) => notice.recipientId === student?.id && !notice.readAt)
+      .filter((notice) => notice.recipientId === student?.id && !notice.readAt && notice.eventType !== 'cbt_published')
       .sort((first, second) => String(second.createdAt).localeCompare(String(first.createdAt)));
     if (!notices.length) {
       container.hidden = true;
@@ -883,14 +877,7 @@ function initializeStudentNotifications() {
     visibleEventKey = notice.eventKey;
     let actionUrl = (notice.actionUrl || '').replace(/^(cbt-result|cbt|academic-results)\.html/, 'student-$1.html');
     let actionLabel = '';
-    if (notice.eventType === 'cbt_published') {
-      actionLabel = 'Take CBT';
-      if (!actionUrl && student) {
-        const matchingTest = getUpcomingCbtTests(student, data)
-          .find((test) => notice.message.includes(`"${test.title}"`));
-        if (matchingTest) actionUrl = `student-cbt.html?test=${encodeURIComponent(matchingTest.id)}`;
-      }
-    } else if (notice.eventType === 'academic_result') {
+    if (notice.eventType === 'academic_result') {
       actionLabel = 'View Academic Results';
       actionUrl = actionUrl || 'student-academic-results.html';
     } else if (notice.eventType === 'cbt_result_ready') {
@@ -2764,7 +2751,7 @@ function renderTeacherQuestions() {
     openModal('deleteQuestionModal');
   });
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const latestData = loadData();
     const testTitle = document.getElementById('questionTestTitle').value.trim();
@@ -2785,27 +2772,49 @@ function renderTeacherQuestions() {
       answer: document.getElementById('correctAnswer').value
     };
     const wasEditing = editingQuestionIndex !== null;
-    const updatedTestId = getCbtTestId(updatedQuestion);
-    const testAlreadyExists = latestData.questions.some((question, index) => index !== editingQuestionIndex
-      && getCbtTestId(question) === updatedTestId);
     if (wasEditing) {
       updatedQuestion._id = latestData.questions[editingQuestionIndex]._id;
       latestData.questions[editingQuestionIndex] = updatedQuestion;
     }
     else latestData.questions.push(updatedQuestion);
-    if (!testAlreadyExists) {
-      notifyClassStudents(latestData, className, 'cbt_published',
-        `${subject} CBT test "${testTitle}" is ready. Click Take CBT to begin.`, teacher.name,
-        `student-cbt.html?test=${encodeURIComponent(updatedTestId)}`);
-    }
     recordActivity(latestData, teacher.name, 'Teacher', `${wasEditing ? 'Updated' : 'Added'} a question in ${testTitle}`);
     saveData(latestData);
-    showToast(wasEditing ? 'Question updated successfully.' : 'Question saved successfully.');
     renderRows();
     if (wasEditing) resetEditor();
     else ['questionText', 'optionA', 'optionB', 'optionC', 'optionD'].forEach((id) => {
       document.getElementById(id).value = '';
     });
+
+    if (!window.PortalSync) {
+      showErrorModal('The question is saved in this browser, but database synchronization is unavailable.');
+      return;
+    }
+    saveButton.disabled = true;
+    showLoginLoader('Saving question to the database...');
+    let syncErrors = [];
+    try {
+      syncErrors = await window.PortalSync.flush();
+    } catch (error) {
+      syncErrors = [error.message];
+    } finally {
+      hideLoginLoader();
+      saveButton.disabled = false;
+    }
+    const signature = JSON.stringify([
+      updatedQuestion.testTitle, updatedQuestion.subject, updatedQuestion.className,
+      updatedQuestion.question, updatedQuestion.options || [], updatedQuestion.answer
+    ]);
+    const savedQuestion = (loadData().questions || []).find((question) => JSON.stringify([
+      question.testTitle, question.subject, question.className,
+      question.question, question.options || [], question.answer
+    ]) === signature);
+    const questionErrors = syncErrors.filter((error) => error.startsWith('questions -'));
+    if (!savedQuestion?._id || questionErrors.length) {
+      showErrorModal('The question could not be confirmed in the database. '
+        + (questionErrors[0] || syncErrors[0] || 'Please try saving again.'));
+    } else if (syncErrors.length) {
+      showToast('Question saved to the database.');
+    }
   });
 
   cancelEditButton.addEventListener('click', resetEditor);
@@ -2813,19 +2822,43 @@ function renderTeacherQuestions() {
     pendingDeleteQuestionIndex = null;
     closeModal('deleteQuestionModal');
   });
-  document.getElementById('confirmQuestionDelete').addEventListener('click', () => {
+  document.getElementById('confirmQuestionDelete').addEventListener('click', async (event) => {
     if (pendingDeleteQuestionIndex === null) return;
     const latestData = loadData();
     const [removedQuestion] = latestData.questions.splice(pendingDeleteQuestionIndex, 1);
     if (removedQuestion) {
       recordActivity(latestData, teacher.name, 'Teacher', `Deleted a question from ${removedQuestion.testTitle || removedQuestion.subject}`);
       saveData(latestData);
-      showToast('Question deleted. Submitted results were preserved.');
     }
     if (editingQuestionIndex !== null) resetEditor();
     pendingDeleteQuestionIndex = null;
     closeModal('deleteQuestionModal');
     renderRows();
+    if (!removedQuestion) return;
+    if (!window.PortalSync) {
+      showErrorModal('The question was removed from this browser, but database synchronization is unavailable.');
+      return;
+    }
+
+    const button = event.currentTarget;
+    button.disabled = true;
+    showLoginLoader('Removing question from the database...');
+    let syncErrors = [];
+    try {
+      syncErrors = await window.PortalSync.flush();
+    } catch (error) {
+      syncErrors = [error.message];
+    } finally {
+      hideLoginLoader();
+      button.disabled = false;
+    }
+    const deleteErrors = syncErrors.filter((error) => error.startsWith('delete questions -'));
+    if (deleteErrors.length) {
+      showErrorModal('The question could not be removed from the database. '
+        + deleteErrors[0] + ' It remains removed in this browser and will be retried on the next save.');
+    } else if (syncErrors.length) {
+      showToast('Question deleted from the database. Submitted results were preserved.');
+    }
   });
   const csvFile = document.getElementById('csvFile');
   if (csvFile) {
@@ -2879,16 +2912,6 @@ function renderTeacherQuestions() {
 
       const latestData = loadData();
       latestData.questions = latestData.questions || [];
-      const existingTests = new Set(latestData.questions.map(getCbtTestId));
-      const notifiedTests = new Set();
-      result.questions.forEach((question) => {
-        const testId = getCbtTestId(question);
-        if (existingTests.has(testId) || notifiedTests.has(testId)) return;
-        notifiedTests.add(testId);
-        notifyClassStudents(latestData, question.className, 'cbt_published',
-          `${question.subject} CBT test "${question.testTitle}" is ready. Click Take CBT to begin.`, teacher.name,
-          `student-cbt.html?test=${encodeURIComponent(testId)}`);
-      });
       result.questions.forEach((question) => latestData.questions.push(question));
       const firstTitle = result.questions[0].testTitle;
       recordActivity(latestData, teacher.name, 'Teacher', `Imported ${result.questions.length} questions from a CSV file (${firstTitle})`);
@@ -2905,6 +2928,8 @@ function renderTeacherQuestions() {
       let syncErrors = [];
       try {
         if (window.PortalSync) syncErrors = await window.PortalSync.flush();
+      } catch (error) {
+        syncErrors = [error.message];
       } finally {
         hideLoginLoader();
       }
@@ -2921,7 +2946,6 @@ function renderTeacherQuestions() {
       const lines = [];
       if (unsaved === 0) {
         lines.push(result.questions.length + ' question(s) imported and saved to the database.');
-        showToast(result.questions.length + ' questions imported and saved to the database.');
       } else {
         const syncError = syncErrors.length ? ' Sync error: ' + syncErrors[0] : '';
         lines.push(result.questions.length + ' question(s) imported, but ' + unsaved + ' have not reached the database yet. They are kept in this browser and the portal will retry on the next save.' + syncError);
