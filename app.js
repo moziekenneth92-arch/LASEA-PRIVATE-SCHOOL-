@@ -2701,6 +2701,10 @@ function renderTeacherQuestions() {
   const form = document.getElementById('questionForm');
   const saveButton = document.getElementById('saveQuestionButton');
   const cancelEditButton = document.getElementById('cancelQuestionEdit');
+  const filterTitle = document.getElementById('questionFilterTitle');
+  const filterSubject = document.getElementById('questionFilterSubject');
+  const filterClass = document.getElementById('questionFilterClass');
+  const filterSummary = document.getElementById('questionFilterSummary');
   const data = loadData();
   const teacher = getCurrentTeacher();
   const subjectSelect = document.getElementById('questionSubject');
@@ -2720,7 +2724,28 @@ function renderTeacherQuestions() {
 
   function renderRows() {
     const questions = loadData().questions || [];
-    table.innerHTML = questions.length ? questions.map((question, index) => `
+    const updateFilterOptions = (select, values, placeholder) => {
+      const selected = select.value;
+      const options = [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
+        .sort((first, second) => first.localeCompare(second, undefined, { sensitivity: 'base' }));
+      select.innerHTML = `<option value="">${placeholder}</option>${options.map((value) => (
+        `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+      )).join('')}`;
+      if (options.includes(selected)) select.value = selected;
+    };
+    updateFilterOptions(filterTitle, questions.map((question) => question.testTitle), 'All test titles');
+    updateFilterOptions(filterSubject, questions.map((question) => question.subject), 'All subjects');
+    updateFilterOptions(filterClass, questions.map((question) => question.className), 'All classes');
+
+    const filtered = questions.map((question, index) => ({ question, index })).filter(({ question }) => (
+      (!filterTitle.value || question.testTitle === filterTitle.value)
+      && (!filterSubject.value || question.subject === filterSubject.value)
+      && (!filterClass.value || question.className === filterClass.value)
+    ));
+    filterSummary.textContent = filtered.length === questions.length
+      ? `${questions.length} question(s)`
+      : `Showing ${filtered.length} of ${questions.length} question(s)`;
+    table.innerHTML = filtered.length ? filtered.map(({ question, index }) => `
       <tr>
         <td>${escapeHtml(question.testTitle || '')}</td>
         <td>${escapeHtml(question.subject)}</td>
@@ -2732,8 +2757,14 @@ function renderTeacherQuestions() {
           <button type="button" class="danger" data-question-action="delete" data-question-index="${index}">Delete</button>
         </div></td>
       </tr>
-    `).join('') : '<tr><td colspan="6" class="empty-state">No questions have been added yet.</td></tr>';
+    `).join('') : `<tr><td colspan="6" class="empty-state">${questions.length
+      ? 'No questions match these filters.'
+      : 'No questions have been added yet.'}</td></tr>`;
   }
+
+  [filterTitle, filterSubject, filterClass].forEach((filter) => {
+    filter.addEventListener('change', renderRows);
+  });
 
   table.addEventListener('click', (event) => {
     const button = event.target.closest('[data-question-action]');
